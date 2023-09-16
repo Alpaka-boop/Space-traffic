@@ -11,6 +11,30 @@ enum CASE_CLASS {
     THIRD_CLASS_CASE        // 20 asteroids / 5 meteorites
 };
 
+namespace DMG_CONST {
+    namespace PLSR_SHIP {
+      uint8_t AST_MAX_N = 1;
+      uint8_t MET_MAX_N = 0;
+    }
+    namespace VAL_SHIP {
+      uint8_t AST_MAX_N = 5;
+      uint8_t MET_MAX_N = 2;
+    }
+    namespace MER_SHIP {
+      uint8_t AST_MAX_N = 5;
+      uint8_t MET_MAX_N = 2;
+    }
+    namespace STEL_SHIP {
+      uint8_t AST_MAX_N = 1;
+      uint8_t MET_MAX_N = 0;
+    }
+    namespace AVG_SHIP {
+      uint8_t AST_MAX_N = 20;
+      uint8_t MET_MAX_N = 5;
+    }
+
+}
+
 enum WEIGHT_CLASS {
     LOW_WEIGHT_CLASS = 1,
     MIDDLE_WEIGHT_CLASS,

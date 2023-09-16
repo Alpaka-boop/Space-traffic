@@ -9,4 +9,6 @@ add_executable(Space_traffic main.cpp
         ShipConstants.h
         Engine.h
         EngineConstants.h
-        DeflectorConstants.h)
+        DeflectorConstants.h
+        Difficulties.h
+        GetDamage.cpp)
