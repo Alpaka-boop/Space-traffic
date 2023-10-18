@@ -14,7 +14,6 @@ enum CASE_CLASS {
 namespace DMG_CONST {
     namespace PLSR_SHIP {
       uint8_t AST_MAX_N = 1;
-      uint8_t MET_MAX_N = 0;
     }
     namespace VAL_SHIP {
       uint8_t AST_MAX_N = 5;
@@ -26,7 +25,6 @@ namespace DMG_CONST {
     }
     namespace STEL_SHIP {
       uint8_t AST_MAX_N = 1;
-      uint8_t MET_MAX_N = 0;
     }
     namespace AVG_SHIP {
       uint8_t AST_MAX_N = 20;
@@ -41,4 +39,4 @@ enum WEIGHT_CLASS {
     HIGH_WEIGHT_CLASS
 };
 
-#endif //SHIP_CONSTANTS_H
+#endif SHIP_CONSTANTS_H
