@@ -21,7 +21,7 @@
 class Ship {
     using DEFL = std::shared_ptr<Deflector>;
 
-    int8_t health = SHIP_FULL_HEALTH_PERCENT;
+    int8_t health = DMG_CONST::SHIP_FULL_HEALTH_PERCENT;
     bool is_alive_team = true;
     bool is_broken_ship = false;
     const DEFL deflector;
@@ -34,8 +34,8 @@ public:
     virtual void getAntiMatterFlashDamage(int anti_matter_num) = 0;
     virtual void getCosmoKitDamage(int cosmo_kit_num) = 0;
 
-    virtual long long fuelConsumptionCounter(const Conditions& conditions) = 0;
-    virtual long long routeTimeCounter(const RouteEnvDistance& distance) = 0;
+    virtual long long calculateFuelConsumption(const Conditions& conditions) = 0;
+    virtual long long calculateTimeTravel(const RouteEnvDistance& distance) = 0;
 
     Ship(const DEFL deflector): deflector(deflector) {}
 
@@ -44,9 +44,9 @@ public:
         Result result(is_alive_team, is_broken_ship);
 
         if (!result.is_broken_ship && result.is_alive_team) {
-            result.spent_fuel = fuelConsumptionCounter(conditions);
+            result.spent_fuel = calculateFuelConsumption(conditions);
             result.total_price = result.spent_fuel * conditions.market->getFuelPrice();
-            result.route_time = routeTimeCounter(conditions.distance);
+            result.route_time = calculateTimeTravel(conditions.distance);
         }
 
         return result;
@@ -55,20 +55,20 @@ public:
 protected:
     Damage damage = {};
 
-    void kill_team() {
+    void killTeam() {
         is_alive_team = false;
     }
 
-    void kill_ship() {
+    void killShip() {
         health = 0;
-        kill_team();
+        killTeam();
         is_broken_ship = true;
     }
 
 private:
     void getDamage(const Difficulties& difficulties) {
         if (!deflector->is_photonic && difficulties.anti_matter_num > 0) {
-            kill_team();
+            killTeam();
         }
         if (!deflector->Protect(difficulties)) {
             getAsteroidDamage(difficulties.aster_num);
@@ -89,32 +89,33 @@ public:
     }
 
 private:
-    long long fuelConsumptionCounter(const Conditions& conditions) override {
-        return conditions.distance.ordinary_space_length * engine->getFuelConsumption()
-        + conditions.distance.nitrine_nebulae_length * engine->getFuelConsumption();
+    long long calculateFuelConsumption(const Conditions& conditions) override {
+        auto full_distance = conditions.distance.ordinary_space_length
+                                    + conditions.distance.nitrine_nebulae_length;
+        return engine->calculateFuelConsumption(full_distance);
     }
 
-    long long routeTimeCounter(const RouteEnvDistance& distance) override {
-        return (distance.ordinary_space_length + distance.nitrine_nebulae_length) / engine->getSpeed();
+    long long calculateTimeTravel(const RouteEnvDistance& distance) override {
+        return engine->calculateTimeTravel(distance.getSum());
     }
 
     void getMeteoriteDamage(int meteor_num) override {
-        kill_ship();
+        killShip();
     }
 
     void getAsteroidDamage(int aster_num) override {
         damage.aster_num += aster_num;
         if (damage.aster_num > DMG_CONST::PLSR_SHIP::AST_MAX_N) {
-            kill_ship();
+            killShip();
         }
     }
 
     void getAntiMatterFlashDamage(int anti_matter_num) override {
-        kill_team();
+        killTeam();
     }
 
     void getCosmoKitDamage(int cosmo_kit_num) override {
-        kill_ship();
+        killShip();
     }
 };
 
@@ -133,37 +134,41 @@ public:
         this->engines.jump_eng = std::move(engines[1]);
     }
 private:
-    long long fuelConsumptionCounter(const Conditions& conditions) override {
-        return conditions.distance.ordinary_space_length * engines.impulse_eng->getFuelConsumption()
-               + conditions.distance.nitrine_nebulae_length * engines.impulse_eng->getFuelConsumption()
-               + conditions.distance.spatial_channels_length * engines.jump_eng->getFuelConsumption();
+    long long calculateFuelConsumption(const Conditions& conditions) override {
+        auto dist_using_imp_eng = conditions.distance.ordinary_space_length
+                                        + conditions.distance.nitrine_nebulae_length;
+        auto dist_using_jump_eng = conditions.distance.spatial_channels_length;
+        return engines.impulse_eng->calculateFuelConsumption(dist_using_imp_eng)
+               + engines.jump_eng->calculateFuelConsumption(dist_using_jump_eng);
     }
 
-    long long routeTimeCounter(const RouteEnvDistance& distance) override {
-        return (distance.ordinary_space_length + distance.nitrine_nebulae_length) / engines.impulse_eng->getSpeed()
-                + distance.spatial_channels_length / engines.jump_eng->getSpeed();
+    long long calculateTimeTravel(const RouteEnvDistance& distance) override {
+        auto dist_using_imp_eng = distance.ordinary_space_length + distance.nitrine_nebulae_length;
+        auto dist_using_jump_eng = distance.spatial_channels_length;
+        return engines.impulse_eng->calculateTimeTravel(dist_using_imp_eng)
+            + engines.jump_eng->calculateTimeTravel(dist_using_jump_eng);
     }
 
     void getMeteoriteDamage(int meteor_num) override {
         damage.meteor_num += meteor_num;
         if (damage.meteor_num > DMG_CONST::VAL_SHIP::MET_MAX_N) {
-            kill_ship();
+            killShip();
         }
     }
 
     void getAsteroidDamage(int aster_num) override {
         damage.aster_num += aster_num;
         if (damage.aster_num > DMG_CONST::VAL_SHIP::AST_MAX_N) {
-            kill_ship();
+            killShip();
         }
     }
 
     void getAntiMatterFlashDamage(int anti_matter_num) override {
-        kill_team();
+        killTeam();
     }
 
     void getCosmoKitDamage(int cosmo_kit_num) override {
-        kill_ship();
+        killShip();
     }
 };
 
@@ -179,31 +184,32 @@ public:
     Meredian(const std::shared_ptr<Engine>& engine, const std::shared_ptr<Deflector>& deflector)
             : engine(engine), Ship(deflector) {}
 private:
-    long long fuelConsumptionCounter(const Conditions& conditions) override {
-        return conditions.distance.ordinary_space_length * engine->getFuelConsumption()
-               + conditions.distance.nitrine_nebulae_length * engine->getFuelConsumption();
+    long long calculateFuelConsumption(const Conditions& conditions) override {
+        auto full_distance = conditions.distance.ordinary_space_length
+                            + conditions.distance.nitrine_nebulae_length;
+        return engine->calculateFuelConsumption(full_distance);
     }
 
-    long long routeTimeCounter(const RouteEnvDistance& distance) override {
-        return (distance.ordinary_space_length + distance.nitrine_nebulae_length) / engine->getSpeed();
+    long long calculateTimeTravel(const RouteEnvDistance& distance) override {
+        return engine->calculateTimeTravel(distance.getSum());
     }
 
     void getMeteoriteDamage(int meteor_num) override {
         damage.meteor_num += meteor_num;
         if (damage.meteor_num > DMG_CONST::MER_SHIP::MET_MAX_N) {
-            kill_ship();
+            killShip();
         }
     }
 
     void getAsteroidDamage(int aster_num) override {
         damage.aster_num += aster_num;
         if (damage.aster_num > DMG_CONST::MER_SHIP::AST_MAX_N) {
-            kill_ship();
+            killShip();
         }
     }
 
     void getAntiMatterFlashDamage(int anti_matter_num) override {
-        kill_team();
+        killTeam();
     }
 
     void getCosmoKitDamage(int cosmo_kit_num) override {
@@ -226,34 +232,38 @@ public:
         this->engines.jump_eng = std::move(engines[1]);
     }
 private:
-    long long fuelConsumptionCounter(const Conditions& conditions) override {
-        return conditions.distance.ordinary_space_length * engines.impulse_eng->getFuelConsumption()
-               + conditions.distance.nitrine_nebulae_length * engines.impulse_eng->getFuelConsumption()
-               + conditions.distance.spatial_channels_length * engines.jump_eng->getFuelConsumption();
+    long long calculateFuelConsumption(const Conditions& conditions) override {
+        auto dist_using_imp_eng = conditions.distance.ordinary_space_length
+                                        + conditions.distance.nitrine_nebulae_length;
+        auto dist_using_jump_eng = conditions.distance.spatial_channels_length;
+        return engines.impulse_eng->calculateFuelConsumption(dist_using_imp_eng)
+               + engines.jump_eng->calculateFuelConsumption(dist_using_jump_eng);
     }
 
-    long long routeTimeCounter(const RouteEnvDistance& distance) override {
-        return (distance.ordinary_space_length + distance.nitrine_nebulae_length) / engines.impulse_eng->getSpeed()
-               + distance.spatial_channels_length / engines.jump_eng->getSpeed();
+    long long calculateTimeTravel(const RouteEnvDistance& distance) override {
+        auto dist_using_imp_eng = distance.ordinary_space_length + distance.nitrine_nebulae_length;
+        auto dist_using_jump_eng = distance.spatial_channels_length;
+        return engines.impulse_eng->calculateTimeTravel(dist_using_imp_eng)
+            + engines.jump_eng->calculateTimeTravel(dist_using_jump_eng);
     }
 
     void getMeteoriteDamage(int meteor_num) override {
-        kill_ship();
+        killShip();
     }
 
     void getAsteroidDamage(int aster_num) override {
         damage.aster_num += aster_num;
         if (damage.aster_num > DMG_CONST::STEL_SHIP::AST_MAX_N) {
-            kill_ship();
+            killShip();
         }
     }
 
     void getAntiMatterFlashDamage(int anti_matter_num) override {
-        kill_team();
+        killTeam();
     }
 
     void getCosmoKitDamage(int cosmo_kit_num) override {
-        kill_ship();
+        killShip();
     }
 };
 
@@ -272,37 +282,41 @@ public:
         this->engines.jump_eng = std::move(engines[1]);
     }
 private:
-    long long fuelConsumptionCounter(const Conditions& conditions) override {
-        return conditions.distance.ordinary_space_length * engines.impulse_eng->getFuelConsumption()
-               + conditions.distance.nitrine_nebulae_length * engines.impulse_eng->getFuelConsumption()
-               + conditions.distance.spatial_channels_length * engines.jump_eng->getFuelConsumption();
+    long long calculateFuelConsumption(const Conditions& conditions) override {
+        auto dist_using_imp_eng = conditions.distance.ordinary_space_length
+                                  + conditions.distance.nitrine_nebulae_length;
+        auto dist_using_jump_eng = conditions.distance.spatial_channels_length;
+        return engines.impulse_eng->calculateFuelConsumption(dist_using_imp_eng)
+               + engines.jump_eng->calculateFuelConsumption(dist_using_jump_eng);
     }
 
-    long long routeTimeCounter(const RouteEnvDistance& distance) override {
-        return (distance.ordinary_space_length + distance.nitrine_nebulae_length) / engines.impulse_eng->getSpeed()
-               + distance.spatial_channels_length / engines.jump_eng->getSpeed();
+    long long calculateTimeTravel(const RouteEnvDistance& distance) override {
+        auto dist_using_imp_eng = distance.ordinary_space_length + distance.nitrine_nebulae_length;
+        auto dist_using_jump_eng = distance.spatial_channels_length;
+        return engines.impulse_eng->calculateTimeTravel(dist_using_imp_eng)
+               + engines.jump_eng->calculateTimeTravel(dist_using_jump_eng);
     }
 
     void getMeteoriteDamage(int meteor_num) override {
         damage.meteor_num += meteor_num;
         if (damage.meteor_num > DMG_CONST::AVG_SHIP::MET_MAX_N) {
-            kill_ship();
+            killShip();
         }
     }
 
     void getAsteroidDamage(int aster_num) override {
         damage.aster_num += aster_num;
         if (damage.aster_num > DMG_CONST::AVG_SHIP::AST_MAX_N) {
-            kill_ship();
+            killShip();
         }
     }
 
     void getAntiMatterFlashDamage(int anti_matter_num) override {
-        kill_team();
+        killTeam();
     }
 
     void getCosmoKitDamage(int cosmo_kit_num) override {
-        kill_ship();
+        killShip();
     }
 };
 
