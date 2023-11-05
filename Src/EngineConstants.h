@@ -2,21 +2,29 @@
 #define ENGINE_CONSTANTS_H
 #include <cmath>
 
-enum ENGINE_TYPES {
-    PULSE_CLASS_C_ENGINE,
-    PULSE_CLASS_E_ENGINE,
-    JUMP_ENGINE
-};
-
 namespace ENG_CONST {
+    long long epsilon = 10;
     namespace PULSE_C_ENG {
-        const long long TEN_LN_START_PACE = 50; // = 10 * log(start pace);
-        const long long FUEL_CONSUMPTION = 1000
+        const long long FUEL_CONSUMPTION = 100;
+        const long long FUEL_TO_START = 100;
+        const long long SPEED = 100;
     }
     namespace PULSE_E_ENG {
-        const long long TEN_LN_START_PACE = 20; // = 10 * log(start pace);
-        const double SPEED_BOOST_COEF = exp(10);
+        const long long FUEL_TO_START = 100;
+        const long long FUEL_CONSUMPTION = 200;
+    }
+    const long long JUMP_ENG_AVG_SPEED = 100;
+    namespace JUMP_ALPHA_ENG {
+        const long long FUEL_TO_START = 0;
+        const long long FUEL_CONSUMPTION = 1000;
+    }
+    namespace JUMP_OMEGA_ENG {
+        const long long FUEL_TO_START = 0;
         const long long FUEL_CONSUMPTION = 2000;
+    }
+    namespace JUMP_GAMMA_ENG {
+        const long long FUEL_TO_START = 0;
+        const long long FUEL_CONSUMPTION = 3000;
     }
 }
 
