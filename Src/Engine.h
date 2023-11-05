@@ -1,53 +1,109 @@
 #ifndef ENGINE_H
 #define ENGINE_H
+
 #include "EngineConstants.h"
+#include "Market.h"
 
 class Engine {
-    virtual unsigned long long BoostSpeed(const unsigned long long current_pace) = 0; // returns 10 * ln(pace)
 protected:
-    long long ten_ln_pace = -1;
     long long fuel_consumption = -1;
+    const long long start_eng_consumption;
 public:
-    virtual long long getSpeed() = 0;
-    virtual long long getFuelConsumption() = 0;
+    virtual long long calculateFuelConsumption(const long long& distance) = 0;
+    virtual long long calculateTimeTravel(const long long& distance) = 0;
+    Engine(const long long& start_eng_consumption): start_eng_consumption(start_eng_consumption) {}
+
+    long long getFuelConsumption() {
+        return fuel_consumption;
+    }
+
+    long long getStartFuelConsumption() {
+        return start_eng_consumption;
+    }
 };
 
 class PulseClassCEngine: protected Engine {
 public:
-    long long getSpeed() override {
-        return ten_ln_pace;
-    }
-
-    long long getFuelConsumption() override {
-        return fuel_consumption;
-    }
-
-    PulseClassCEngine() {
-        ten_ln_pace = ENG_CONST::PULSE_C_ENG::TEN_LN_START_PACE;
+    PulseClassCEngine(): Engine(ENG_CONST::PULSE_C_ENG::FUEL_TO_START) {
         fuel_consumption = ENG_CONST::PULSE_C_ENG::FUEL_CONSUMPTION;
     }
 
-    unsigned long long BoostSpeed(const unsigned long long) override {
-        return ten_ln_pace;
-    };
+    long long calculateTimeTravel(const long long& distance) override {
+        return distance / ENG_CONST::PULSE_C_ENG::SPEED;
+    }
+
+    long long calculateFuelConsumption(const long long& distance) override {
+        return distance / fuel_consumption + start_eng_consumption;
+    }
 };
 
 class PulseClassEEngine: protected Engine {
 public:
-    PulseClassEEngine() {
-        ten_ln_pace = ENG_CONST::PULSE_E_ENG::TEN_LN_START_PACE;
+    PulseClassEEngine(): Engine(ENG_CONST::PULSE_E_ENG::FUEL_TO_START) {
         fuel_consumption = ENG_CONST::PULSE_E_ENG::FUEL_CONSUMPTION;
     }
-    unsigned long long BoostSpeed(const unsigned long long current_pace) override {
-        return current_pace + log(ENG_CONST::PULSE_E_ENG::SPEED_BOOST_COEF);
+
+    long long calculateTimeTravel(const long long& distance) override { // S = v0 * t0 * exp(t/t0) - v0 * (t + t0), v0 = 1, t0 = 1
+        long long left_time = std::log(distance);
+        long long right_time = 2 * std::log(distance);
+
+        while (left_time + ENG_CONST::epsilon < right_time) {
+            int median = (left_time + right_time) / 2;
+            if (std::exp(median) - median - 1 < distance) {
+                left_time = median;
+            } else if (std::exp(median) - median - 1 < distance) {
+                right_time = median;
+            } else {
+                return median;
+            }
+        }
+
+        return (left_time + right_time) / 2;
+    }
+
+    long long calculateFuelConsumption(const long long& distance) override {
+        return distance / fuel_consumption + start_eng_consumption;
     }
 };
 
-class JumpClassEngine: protected Engine {};
-
-class Deflector {
+class JumpClassEngine: protected Engine {
 public:
-    Deflector() {}
+    JumpClassEngine(): Engine(ENG_CONST::JUMP_ALPHA_ENG::FUEL_TO_START) {}
+    long long calculateTimeTravel(const long long& distance) override {
+        return distance / ENG_CONST::JUMP_ENG_AVG_SPEED;
+    }
 };
 
-#endif ENGINE_H
+class AlphaJumpEng: protected JumpClassEngine {
+public:
+    AlphaJumpEng() {
+        fuel_consumption = ENG_CONST::JUMP_ALPHA_ENG::FUEL_CONSUMPTION;
+    }
+
+    long long calculateFuelConsumption(const long long& distance) override {
+        return distance / fuel_consumption + start_eng_consumption;
+    }
+};
+
+class OmegaJumpEng: protected JumpClassEngine {
+public:
+    OmegaJumpEng() {
+        fuel_consumption = ENG_CONST::JUMP_OMEGA_ENG::FUEL_CONSUMPTION;
+    }
+
+    long long calculateFuelConsumption(const long long& distance) override {
+        return distance / (fuel_consumption * std::log(fuel_consumption)) + start_eng_consumption;
+    }
+};
+
+class GammaJumpEng: protected JumpClassEngine {
+    GammaJumpEng() {
+        fuel_consumption = ENG_CONST::JUMP_GAMMA_ENG::FUEL_CONSUMPTION;
+    }
+
+    long long calculateFuelConsumption(const long long& distance) override {
+        return distance / (fuel_consumption * fuel_consumption) + start_eng_consumption;
+    }
+};
+
+#endif
