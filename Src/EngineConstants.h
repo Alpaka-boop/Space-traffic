@@ -28,4 +28,4 @@ namespace ENG_CONST {
     }
 }
 
-#endif ENGINE_CONSTANTS_H
+#endif // ENGINE_CONSTANTS_H

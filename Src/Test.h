@@ -1,8 +1,6 @@
-//
-// Created by Сергей Викторович on 06.11.2023.
-//
+#ifndef TEST_H
+#define TEST_H
 
-#ifndef SPACE_TRAFFIC_TEST_H
-#define SPACE_TRAFFIC_TEST_H
+bool Test();
 
-#endif //SPACE_TRAFFIC_TEST_H
+#endif // TEST_H

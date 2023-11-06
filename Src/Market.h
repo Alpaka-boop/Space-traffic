@@ -1,15 +1,14 @@
 #ifndef MARKET_H
 #define MARKET_H
 
-
 class Market{
-    int fuel_price = 100;
+    const int fuel_price = 100;
 
 public:
-    getFuelPrice() {
+    int getFuelPrice() const {
         return fuel_price;
     }
 };
 
 
-#endif MARKET_H
+#endif // MARKET_H

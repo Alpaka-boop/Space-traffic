@@ -27,7 +27,9 @@ struct RouteEnvDistance {
     }
 };
 
-class Environment {};
+class Environment {
+    virtual void foo() {};
+};
 
 class FreeSpace: public Environment {};
 class DensitySpace: public Environment {};
@@ -37,11 +39,11 @@ struct Conditions {
     RouteEnvDistance distance;
     Difficulties difficulties;
     std::shared_ptr<Market> market;
-    Environment& environment;
+    const Environment& environment;
 
     Conditions(std::tuple<long long, long long, long long>&& distance
-               , Difficulties&& difficulties, std::shared_ptr<Market> market, Environment& environment)
+               , Difficulties&& difficulties, std::shared_ptr<Market> market, const Environment& environment)
     : distance(std::move(distance)), difficulties(difficulties), market(std::move(market)), environment(environment) {}
 };
 
-#endif
+#endif // CONDITIONS_H

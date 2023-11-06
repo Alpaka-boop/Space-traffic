@@ -12,7 +12,6 @@
 #include "Conditions.h"
 #include "Market.h"
 #include "Damage.h"
-#include "IsType.h"
 
 class Ship {
 public:
@@ -25,7 +24,7 @@ private:
     bool is_alive_team = true;
     bool is_broken_ship = false;
     const DEFL deflector;
-    const AntiNitrAmitter anti_nitr_amitter = true;
+    const AntiNitrAmitter anti_nitr_amitter;
 
 public:
     virtual void getMeteoriteDamage(int meteor_num) = 0;
@@ -43,7 +42,7 @@ public:
     Result Navigate(Conditions& conditions) {
         is_lost = !IsAbleToComplete(conditions.environment);
         getDamage(conditions.difficulties);
-        Result result(is_alive_team, is_broken_ship, is_lost);
+        Result result(is_alive_team, is_broken_ship, is_lost, deflector->isBroken());
 
         if (!result.is_broken_ship && result.is_alive_team && !result.is_lost) {
             result.spent_fuel = calculateFuelConsumption(conditions);
@@ -68,10 +67,6 @@ protected:
 
 private:
     void getDamage(Difficulties& difficulties) {
-        if (!deflector->is_photonic && difficulties.anti_matter_num > 0) {
-            killTeam();
-        }
-        int cosmo_kit_num = difficulties.cosmo_kit_num;
         if (anti_nitr_amitter) {
             difficulties.cosmo_kit_num = 0;
         }
@@ -111,7 +106,9 @@ private:
     }
 
     void getMeteoriteDamage(int meteor_num) override {
-        killShip();
+        if (meteor_num > 0) {
+            killShip();
+        }
     }
 
     void getAsteroidDamage(int aster_num) override {
@@ -122,7 +119,9 @@ private:
     }
 
     void getAntiMatterFlashDamage(int anti_matter_num) override {
-        killTeam();
+        if (anti_matter_num > 0) {
+            killTeam();
+        }
     }
 
     bool IsAbleToComplete(const Environment &environment) override {
@@ -177,7 +176,9 @@ private:
     }
 
     void getAntiMatterFlashDamage(int anti_matter_num) override {
-        killTeam();
+        if (anti_matter_num > 0) {
+            killTeam();
+        }
     }
 
     bool IsAbleToComplete(const Environment &environment) override {
@@ -219,7 +220,9 @@ private:
     }
 
     void getAntiMatterFlashDamage(int anti_matter_num) override {
-        killTeam();
+        if (anti_matter_num > 0) {
+            killTeam();
+        }
     }
 
     bool IsAbleToComplete(const Environment &environment) override {
@@ -260,7 +263,9 @@ private:
     }
 
     void getMeteoriteDamage(int meteor_num) override {
-        killShip();
+        if (meteor_num > 0) {
+            killShip();
+        }
     }
 
     void getAsteroidDamage(int aster_num) override {
@@ -271,7 +276,9 @@ private:
     }
 
     void getAntiMatterFlashDamage(int anti_matter_num) override {
-        killTeam();
+        if (anti_matter_num > 0) {
+            killTeam();
+        }
     }
 
     bool IsAbleToComplete(const Environment &environment) override {
@@ -326,7 +333,9 @@ private:
     }
 
     void getAntiMatterFlashDamage(int anti_matter_num) override {
-        killTeam();
+        if (anti_matter_num > 0) {
+            killTeam();
+        }
     }
 
     bool IsAbleToComplete(const Environment &environment) override {

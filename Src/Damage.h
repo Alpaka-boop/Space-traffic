@@ -8,4 +8,4 @@ struct Damage {
     int cosmo_kit_num = 0;
 };
 
-#endif DAMAGE_H
+#endif // DAMAGE_H

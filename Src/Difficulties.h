@@ -17,4 +17,4 @@ public:
     : aster_num(aster_num), meteor_num(meteor_num), anti_matter_num(anti_matter_num), cosmo_kit_num(cosmo_kit_num) {}
 };
 
-#endif DIFFICULTIES_H
+#endif // DIFFICULTIES_H
