@@ -8,23 +8,21 @@
 #include "Engine.h"
 #include "ShipConstants.h"
 #include "Difficulties.h"
-#include "GetDamage.cpp"
 #include "Result.h"
 #include "Conditions.h"
 #include "Market.h"
 #include "Damage.h"
-
-// TODO move constructors =>
-// TODO engine = 0, deflector = 0  null the fields
-// TODO navigation for other ships (look for pleasure ship example)
+#include "IsType.h"
 
 class Ship {
     using DEFL = std::shared_ptr<Deflector>;
+    using AntiNitrAmitter = bool;
 
-    int8_t health = DMG_CONST::SHIP_FULL_HEALTH_PERCENT;
+    bool is_lost = false;
     bool is_alive_team = true;
     bool is_broken_ship = false;
     const DEFL deflector;
+    const AntiNitrAmitter anti_nitr_amitter = true;
 
 public:
     using ENG = std::shared_ptr<Engine>;
@@ -32,18 +30,28 @@ public:
     virtual void getMeteoriteDamage(int meteor_num) = 0;
     virtual void getAsteroidDamage(int aster_num) = 0;
     virtual void getAntiMatterFlashDamage(int anti_matter_num) = 0;
-    virtual void getCosmoKitDamage(int cosmo_kit_num) = 0;
 
     virtual long long calculateFuelConsumption(const Conditions& conditions) = 0;
     virtual long long calculateTimeTravel(const RouteEnvDistance& distance) = 0;
 
-    Ship(const DEFL deflector): deflector(deflector) {}
+    virtual bool AbilityToCompleteChecker(const Environment& environment) = 0;
+
+    Ship(DEFL deflector, AntiNitrAmitter anti_nitr_amitter)
+    : deflector(std::move(deflector)), anti_nitr_amitter(anti_nitr_amitter) {}
+
+    template <typename Env, typename Eng>
+    bool CheckEngine() {
+        return (is_free_space_v<Env> && is_pulse_engine_v<Eng>)
+            || (is_density_space_v<Env> && is_jump_engine_v<Eng>)
+            || (is_density_space_v<Env> && is_pulse_e_engine_v<Eng>);
+    }
 
     Result Navigate(const Conditions& conditions) {
+        is_lost = AbilityToCompleteChecker(conditions.environment);
         getDamage(conditions.difficulties);
-        Result result(is_alive_team, is_broken_ship);
+        Result result(is_alive_team, is_broken_ship, is_lost);
 
-        if (!result.is_broken_ship && result.is_alive_team) {
+        if (!result.is_broken_ship && result.is_alive_team && !result.is_lost) {
             result.spent_fuel = calculateFuelConsumption(conditions);
             result.total_price = result.spent_fuel * conditions.market->getFuelPrice();
             result.route_time = calculateTimeTravel(conditions.distance);
@@ -60,7 +68,6 @@ protected:
     }
 
     void killShip() {
-        health = 0;
         killTeam();
         is_broken_ship = true;
     }
@@ -70,11 +77,21 @@ private:
         if (!deflector->is_photonic && difficulties.anti_matter_num > 0) {
             killTeam();
         }
+        int cosmo_kit_num = difficulties.cosmo_kit_num;
+        if (anti_nitr_amitter) {
+            const_cast<int&>(difficulties.cosmo_kit_num) = 0;
+        }
         if (!deflector->Protect(difficulties)) {
             getAsteroidDamage(difficulties.aster_num);
             getMeteoriteDamage(difficulties.meteor_num);
             getCosmoKitDamage(difficulties.cosmo_kit_num);
+            getAntiMatterFlashDamage(difficulties.anti_matter_num);
         }
+        const_cast<int&>(difficulties.cosmo_kit_num) = cosmo_kit_num;
+    }
+
+    void getCosmoKitDamage(int cosmo_kit_num) {
+        killShip();
     }
 };
 
@@ -85,7 +102,7 @@ class PleasureShuttle: private Ship {
 
 public:
     PleasureShuttle(std::shared_ptr<Engine>&& engine, std::shared_ptr<Deflector>&& deflector)
-            : engine(engine), Ship(deflector) {
+            : engine(engine), Ship(deflector, AMITTER::FALSE) {
     }
 
 private:
@@ -114,12 +131,12 @@ private:
         killTeam();
     }
 
-    void getCosmoKitDamage(int cosmo_kit_num) override {
-        killShip();
+    bool AbilityToCompleteChecker(const Environment &environment) override {
+        return !CheckEngine<Environment, Engine>();
     }
 };
 
-class Vaclas: Ship {
+class Vaclas: protected Ship {
     struct Vaclas_Engines {
         ENG impulse_eng;
         ENG jump_eng;
@@ -128,8 +145,8 @@ class Vaclas: Ship {
     const int8_t weight_class = MIDDLE_WEIGHT_CLASS;     // middle weight, middle height
 
 public:
-    Vaclas(std::vector<const std::shared_ptr<Engine>>&& engines
-            , std::shared_ptr<Deflector>&& deflector): Ship(deflector) {
+    Vaclas(std::vector<std::shared_ptr<Engine>>& engines
+            , std::shared_ptr<Deflector>&& deflector): Ship(deflector, AMITTER::FALSE) {
         this->engines.impulse_eng = std::move(engines[0]);
         this->engines.jump_eng = std::move(engines[1]);
     }
@@ -167,22 +184,20 @@ private:
         killTeam();
     }
 
-    void getCosmoKitDamage(int cosmo_kit_num) override {
-        killShip();
+    bool AbilityToCompleteChecker(const Environment &environment) override {
+        return !CheckEngine<Environment, decltype(engines.jump_eng)>()
+                && !CheckEngine<Environment, decltype(engines.impulse_eng)>();
     }
 };
 
 class Meredian: Ship {
-    using AntiNitrAmitter = bool; // TODO
-
     const ENG engine;                                    // Class E impulse engine
     const int8_t case_class = SECOND_CLASS_CASE;         // 5  asteroids / 2 meteorites
     const int8_t weight_class = MIDDLE_WEIGHT_CLASS;     // middle weight, middle height
-    const AntiNitrAmitter anti_nitr_amitter = true; // TODO
 
 public:
     Meredian(const std::shared_ptr<Engine>& engine, const std::shared_ptr<Deflector>& deflector)
-            : engine(engine), Ship(deflector) {}
+            : engine(engine), Ship(deflector, AMITTER::TRUE) {}
 private:
     long long calculateFuelConsumption(const Conditions& conditions) override {
         auto full_distance = conditions.distance.ordinary_space_length
@@ -212,8 +227,8 @@ private:
         killTeam();
     }
 
-    void getCosmoKitDamage(int cosmo_kit_num) override {
-        return; // TODO when we there deflectors already have been defeated but should not be
+    bool AbilityToCompleteChecker(const Environment &environment) override {
+        return !CheckEngine<Environment, Engine>();
     }
 };
 
@@ -226,8 +241,8 @@ class Stella: Ship {
     const int8_t weight_class = LOW_WEIGHT_CLASS;        // middle weight, middle height
 
 public:
-    Stella(const std::vector<const std::shared_ptr<Engine>>& engines
-            , const std::shared_ptr<Deflector>& deflector): Ship(deflector) {
+    Stella(std::vector<std::shared_ptr<Engine>>& engines
+            , const std::shared_ptr<Deflector>& deflector): Ship(deflector, AMITTER::FALSE) {
         this->engines.impulse_eng = std::move(engines[0]);
         this->engines.jump_eng = std::move(engines[1]);
     }
@@ -262,8 +277,9 @@ private:
         killTeam();
     }
 
-    void getCosmoKitDamage(int cosmo_kit_num) override {
-        killShip();
+    bool AbilityToCompleteChecker(const Environment &environment) override {
+        return !CheckEngine<Environment, decltype(engines.jump_eng)>()
+               && !CheckEngine<Environment, decltype(engines.impulse_eng)>();
     }
 };
 
@@ -276,8 +292,8 @@ class Avgur: Ship {
     const int8_t weight_class = HIGH_WEIGHT_CLASS;       // middle weight, middle height
 
 public:
-    Avgur(const std::vector<const std::shared_ptr<Engine>>& engines
-            , const std::shared_ptr<Deflector>& deflector): Ship(deflector) {
+    Avgur(std::vector<std::shared_ptr<Engine>>& engines
+            , const std::shared_ptr<Deflector>& deflector): Ship(deflector, AMITTER::FALSE) {
         this->engines.impulse_eng = std::move(engines[0]);
         this->engines.jump_eng = std::move(engines[1]);
     }
@@ -315,8 +331,9 @@ private:
         killTeam();
     }
 
-    void getCosmoKitDamage(int cosmo_kit_num) override {
-        killShip();
+    bool AbilityToCompleteChecker(const Environment &environment) override {
+        return !CheckEngine<Environment, decltype(engines.jump_eng)>()
+               && !CheckEngine<Environment, decltype(engines.impulse_eng)>();
     }
 };
 
