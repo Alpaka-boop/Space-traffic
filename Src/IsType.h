@@ -64,7 +64,7 @@ template <typename T, typename = void>
 struct is_pulse_engine: std::false_type {};
 
 template <typename T>
-struct is_pulse_engine<T, std::void_t<std::enable_if<is_pulse_e_engine<T>() || is_pulse_c_engine<T>()>>>
+struct is_pulse_engine<T, std::void_t<std::enable_if<is_pulse_e_engine_v<T> || is_pulse_c_engine_v<T>>>>
         : std::true_type {};
 
 template <typename T>
