@@ -43,7 +43,7 @@ public:
     bool CheckEngine() {
         return (is_free_space_v<Env> && is_pulse_engine_v<Eng>)
             || (is_density_space_v<Env> && is_jump_engine_v<Eng>)
-            || (is_density_space_v<Env> && is_pulse_e_engine_v<Eng>);
+            || (is_nitrine_space_v<Env> && is_pulse_e_engine_v<Eng>);
     }
 
     Result Navigate(const Conditions& conditions) {
