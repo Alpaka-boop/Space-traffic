@@ -15,7 +15,10 @@
 #include "IsType.h"
 
 class Ship {
+public:
     using DEFL = std::shared_ptr<Deflector>;
+    using ENG = std::shared_ptr<Engine>;
+private:
     using AntiNitrAmitter = bool;
 
     bool is_lost = false;
@@ -25,8 +28,6 @@ class Ship {
     const AntiNitrAmitter anti_nitr_amitter = true;
 
 public:
-    using ENG = std::shared_ptr<Engine>;
-
     virtual void getMeteoriteDamage(int meteor_num) = 0;
     virtual void getAsteroidDamage(int aster_num) = 0;
     virtual void getAntiMatterFlashDamage(int anti_matter_num) = 0;
@@ -36,8 +37,8 @@ public:
 
     virtual bool AbilityToCompleteChecker(const Environment& environment) = 0;
 
-    Ship(DEFL deflector, AntiNitrAmitter anti_nitr_amitter)
-    : deflector(std::move(deflector)), anti_nitr_amitter(anti_nitr_amitter) {}
+    Ship(DEFL&& deflector, AntiNitrAmitter anti_nitr_amitter)
+            : deflector(std::forward<DEFL>(deflector)), anti_nitr_amitter(anti_nitr_amitter) {}
 
     template <typename Env, typename Eng>
     bool CheckEngine() {
@@ -101,9 +102,8 @@ class PleasureShuttle: private Ship {
     const int8_t weight_class = LOW_WEIGHT_CLASS;       // little and light
 
 public:
-    PleasureShuttle(std::shared_ptr<Engine>&& engine, std::shared_ptr<Deflector>&& deflector)
-            : engine(engine), Ship(deflector, AMITTER::FALSE) {
-    }
+    PleasureShuttle(): Ship(std::make_shared<NoDefl>(), AMITTER::FALSE)
+                    , engine(std::make_shared<PulseClassCEngine>()) {}
 
 private:
     long long calculateFuelConsumption(const Conditions& conditions) override {
@@ -145,11 +145,8 @@ class Vaclas: protected Ship {
     const int8_t weight_class = MIDDLE_WEIGHT_CLASS;     // middle weight, middle height
 
 public:
-    Vaclas(std::vector<std::shared_ptr<Engine>>& engines
-            , std::shared_ptr<Deflector>&& deflector): Ship(deflector, AMITTER::FALSE) {
-        this->engines.impulse_eng = std::move(engines[0]);
-        this->engines.jump_eng = std::move(engines[1]);
-    }
+    explicit Vaclas(bool is_photonic = false): Ship(std::make_shared<Class1>(is_photonic), AMITTER::FALSE)
+                                , engines({std::make_shared<PulseClassEEngine>(), std::make_shared<GammaJumpEng>()}) {}
 private:
     long long calculateFuelConsumption(const Conditions& conditions) override {
         auto dist_using_imp_eng = conditions.distance.ordinary_space_length
@@ -196,8 +193,8 @@ class Meredian: Ship {
     const int8_t weight_class = MIDDLE_WEIGHT_CLASS;     // middle weight, middle height
 
 public:
-    Meredian(const std::shared_ptr<Engine>& engine, const std::shared_ptr<Deflector>& deflector)
-            : engine(engine), Ship(deflector, AMITTER::TRUE) {}
+    explicit Meredian(bool is_photonic = false): Ship(std::make_shared<Class2>(is_photonic)
+                                    , AMITTER::TRUE), engine(std::make_shared<PulseClassEEngine>()) {}
 private:
     long long calculateFuelConsumption(const Conditions& conditions) override {
         auto full_distance = conditions.distance.ordinary_space_length
@@ -241,11 +238,8 @@ class Stella: Ship {
     const int8_t weight_class = LOW_WEIGHT_CLASS;        // middle weight, middle height
 
 public:
-    Stella(std::vector<std::shared_ptr<Engine>>& engines
-            , const std::shared_ptr<Deflector>& deflector): Ship(deflector, AMITTER::FALSE) {
-        this->engines.impulse_eng = std::move(engines[0]);
-        this->engines.jump_eng = std::move(engines[1]);
-    }
+    explicit Stella(bool is_photonic = false): Ship(std::make_shared<Class1>(is_photonic), AMITTER::FALSE)
+            , engines({std::make_shared<PulseClassCEngine>(), std::make_shared<OmegaJumpEng>()}) {}
 private:
     long long calculateFuelConsumption(const Conditions& conditions) override {
         auto dist_using_imp_eng = conditions.distance.ordinary_space_length
@@ -292,11 +286,8 @@ class Avgur: Ship {
     const int8_t weight_class = HIGH_WEIGHT_CLASS;       // middle weight, middle height
 
 public:
-    Avgur(std::vector<std::shared_ptr<Engine>>& engines
-            , const std::shared_ptr<Deflector>& deflector): Ship(deflector, AMITTER::FALSE) {
-        this->engines.impulse_eng = std::move(engines[0]);
-        this->engines.jump_eng = std::move(engines[1]);
-    }
+    explicit Avgur(bool is_photonic = false): Ship(std::make_shared<Class3>(is_photonic), AMITTER::FALSE)
+                                , engines({std::make_shared<PulseClassEEngine>(), std::make_shared<AlphaJumpEng>()}) {}
 private:
     long long calculateFuelConsumption(const Conditions& conditions) override {
         auto dist_using_imp_eng = conditions.distance.ordinary_space_length
