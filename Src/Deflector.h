@@ -54,11 +54,11 @@ public:
         is_damaged = true;
     }
 
-    bool AsteroidProtect(int) override {
+    bool AsteroidProtect(int&) override {
         return false;
     }
 
-    bool MeteoriteProtect(int) override {
+    bool MeteoriteProtect(int&) override {
         return false;
     }
 };
