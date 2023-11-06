@@ -35,20 +35,13 @@ public:
     virtual long long calculateFuelConsumption(const Conditions& conditions) = 0;
     virtual long long calculateTimeTravel(const RouteEnvDistance& distance) = 0;
 
-    virtual bool AbilityToCompleteChecker(const Environment& environment) = 0;
+    virtual bool IsAbleToComplete(const Environment& environment) = 0;
 
     Ship(DEFL&& deflector, AntiNitrAmitter anti_nitr_amitter)
             : deflector(std::forward<DEFL>(deflector)), anti_nitr_amitter(anti_nitr_amitter) {}
 
-    template <typename Env, typename Eng>
-    bool CheckEngine() {
-        return (is_free_space_v<Env> && is_pulse_engine_v<Eng>)
-            || (is_density_space_v<Env> && is_jump_engine_v<Eng>)
-            || (is_nitrine_space_v<Env> && is_pulse_e_engine_v<Eng>);
-    }
-
-    Result Navigate(const Conditions& conditions) {
-        is_lost = AbilityToCompleteChecker(conditions.environment);
+    Result Navigate(Conditions& conditions) {
+        is_lost = !IsAbleToComplete(conditions.environment);
         getDamage(conditions.difficulties);
         Result result(is_alive_team, is_broken_ship, is_lost);
 
@@ -74,13 +67,13 @@ protected:
     }
 
 private:
-    void getDamage(const Difficulties& difficulties) {
+    void getDamage(Difficulties& difficulties) {
         if (!deflector->is_photonic && difficulties.anti_matter_num > 0) {
             killTeam();
         }
         int cosmo_kit_num = difficulties.cosmo_kit_num;
         if (anti_nitr_amitter) {
-            const_cast<int&>(difficulties.cosmo_kit_num) = 0;
+            difficulties.cosmo_kit_num = 0;
         }
         if (!deflector->Protect(difficulties)) {
             getAsteroidDamage(difficulties.aster_num);
@@ -88,15 +81,16 @@ private:
             getCosmoKitDamage(difficulties.cosmo_kit_num);
             getAntiMatterFlashDamage(difficulties.anti_matter_num);
         }
-        const_cast<int&>(difficulties.cosmo_kit_num) = cosmo_kit_num;
     }
 
     void getCosmoKitDamage(int cosmo_kit_num) {
-        killShip();
+        if (cosmo_kit_num > 0) {
+            killShip();
+        }
     }
 };
 
-class PleasureShuttle: private Ship {
+class PleasureShuttle: public Ship {
     const ENG engine;                                   // Impulse class C engine
     const int8_t case_class = FIRST_CLASS_CASE;         // 1 asteroid / 0 meteorites
     const int8_t weight_class = LOW_WEIGHT_CLASS;       // little and light
@@ -131,12 +125,17 @@ private:
         killTeam();
     }
 
-    bool AbilityToCompleteChecker(const Environment &environment) override {
-        return !CheckEngine<Environment, Engine>();
+    bool IsAbleToComplete(const Environment &environment) override {
+        try {
+            dynamic_cast<const FreeSpace&>(environment);
+        } catch (std::bad_cast) {
+            return false;
+        }
+        return  true;
     }
 };
 
-class Vaclas: protected Ship {
+class Vaclas: public Ship {
     struct Vaclas_Engines {
         ENG impulse_eng;
         ENG jump_eng;
@@ -181,13 +180,12 @@ private:
         killTeam();
     }
 
-    bool AbilityToCompleteChecker(const Environment &environment) override {
-        return !CheckEngine<Environment, decltype(engines.jump_eng)>()
-                && !CheckEngine<Environment, decltype(engines.impulse_eng)>();
+    bool IsAbleToComplete(const Environment &environment) override {
+        return true;
     }
 };
 
-class Meredian: Ship {
+class Meredian: public Ship {
     const ENG engine;                                    // Class E impulse engine
     const int8_t case_class = SECOND_CLASS_CASE;         // 5  asteroids / 2 meteorites
     const int8_t weight_class = MIDDLE_WEIGHT_CLASS;     // middle weight, middle height
@@ -224,12 +222,17 @@ private:
         killTeam();
     }
 
-    bool AbilityToCompleteChecker(const Environment &environment) override {
-        return !CheckEngine<Environment, Engine>();
+    bool IsAbleToComplete(const Environment &environment) override {
+        try {
+            dynamic_cast<const DensitySpace&>(environment);
+        } catch (std::bad_cast) {
+            return true;
+        }
+        return false;
     }
 };
 
-class Stella: Ship {
+class Stella: public Ship {
     struct Stella_Engines {
         ENG impulse_eng;
         ENG jump_eng;
@@ -271,13 +274,17 @@ private:
         killTeam();
     }
 
-    bool AbilityToCompleteChecker(const Environment &environment) override {
-        return !CheckEngine<Environment, decltype(engines.jump_eng)>()
-               && !CheckEngine<Environment, decltype(engines.impulse_eng)>();
+    bool IsAbleToComplete(const Environment &environment) override {
+        try {
+            dynamic_cast<const NitrineSpace&>(environment);
+        } catch (std::bad_cast) {
+            return true;
+        }
+        return false;
     }
 };
 
-class Avgur: Ship {
+class Avgur: public Ship {
     struct Avgur_Engines {
         ENG impulse_eng;
         ENG jump_eng;
@@ -322,10 +329,9 @@ private:
         killTeam();
     }
 
-    bool AbilityToCompleteChecker(const Environment &environment) override {
-        return !CheckEngine<Environment, decltype(engines.jump_eng)>()
-               && !CheckEngine<Environment, decltype(engines.impulse_eng)>();
+    bool IsAbleToComplete(const Environment &environment) override {
+        return true;
     }
 };
 
-#endif
+#endif // SHIP_H

@@ -6,10 +6,11 @@
 #include "DeflectorConstants.h"
 
 class Deflector {
-    virtual bool AsteroidProtect(int aster_num) = 0;
-    virtual bool MeteoriteProtect(int meteor_num) = 0;
+    virtual bool AsteroidProtect(int& aster_num) = 0;
+    virtual bool MeteoriteProtect(int& meteor_num) = 0;
 
-    bool CosmoKitDamageProtect(int cosmo_kit_num) {
+    bool CosmoKitDamageProtect(int& cosmo_kit_num) {
+        --cosmo_kit_num;
         if (!is_damaged) {
             is_damaged = true;
             return true;
@@ -17,13 +18,15 @@ class Deflector {
         return false;
     }
 
-    bool AntiMatterProtect(int anti_matter_num) {
+    bool AntiMatterProtect(int& anti_matter_num) {
         if (is_photonic && !is_damaged) {
-            damage.anti_matter_num += anti_matter_num;
-            if (damage.anti_matter_num <= DEFL_DMG_CONST::PHOTONIC::ANTIMAT_MAX_N) {
-                return  true;
+            if (DEFL_DMG_CONST::PHOTONIC::ANTIMAT_MAX_N - damage.anti_matter_num >= anti_matter_num) {
+                damage.anti_matter_num += anti_matter_num;
+                anti_matter_num = 0;
+                return true;
             }
-            is_photonic = false;
+            anti_matter_num -= (DEFL_DMG_CONST::PHOTONIC::ANTIMAT_MAX_N - damage.anti_matter_num);
+            damage.anti_matter_num = DEFL_DMG_CONST::PHOTONIC::ANTIMAT_MAX_N;
         }
         return false;
     }
@@ -35,9 +38,9 @@ protected:
 public:
     bool is_photonic = false;
 
-    Deflector(bool is_photonic): is_photonic(is_photonic) {}
+    explicit Deflector(bool is_photonic): is_photonic(is_photonic) {}
 
-    bool Protect(const Difficulties& difficulties) {
+    bool Protect(Difficulties& difficulties) {
         return AsteroidProtect(difficulties.aster_num)
             & MeteoriteProtect(difficulties.meteor_num)
             & AntiMatterProtect(difficulties.anti_matter_num)
@@ -45,84 +48,112 @@ public:
     }
 };
 
-class Class1: private Deflector {
+class NoDefl: public Deflector {
 public:
-    Class1(bool is_photonic): Deflector(is_photonic) {}
+    NoDefl(): Deflector(false) {
+        is_damaged = true;
+    }
 
-    bool AsteroidProtect(int aster_num) override {
+    bool AsteroidProtect(int) override {
+        return false;
+    }
+
+    bool MeteoriteProtect(int) override {
+        return false;
+    }
+};
+
+class Class1: public Deflector {
+public:
+    explicit Class1(bool is_photonic): Deflector(is_photonic) {}
+
+    bool AsteroidProtect(int& aster_num) override {
         if (!is_damaged) {
-            damage.aster_num += aster_num;
-            if (damage.aster_num <= DEFL_DMG_CONST::CLASS1::AST_MAX_N) {
+            if (DEFL_DMG_CONST::CLASS1::AST_MAX_N - damage.aster_num >= aster_num) {
+                damage.aster_num += aster_num;
+                aster_num = 0;
                 return true;
             }
-            is_damaged = true;
+            aster_num -= (DEFL_DMG_CONST::CLASS1::AST_MAX_N - damage.aster_num);
+            damage.aster_num = DEFL_DMG_CONST::CLASS1::AST_MAX_N;
         }
         return false;
     }
 
-    bool MeteoriteProtect(int meteor_num) override {
+    bool MeteoriteProtect(int& meteor_num) override {
         if (!is_damaged) {
-            damage.meteor_num += meteor_num;
-            if (damage.meteor_num <= DEFL_DMG_CONST::CLASS1::AST_MAX_N) {
+            if (DEFL_DMG_CONST::CLASS1::MET_MAX_N - damage.meteor_num >= meteor_num) {
+                damage.meteor_num += meteor_num;
+                meteor_num = 0;
                 return true;
             }
-            is_damaged = true;
+            meteor_num -= (DEFL_DMG_CONST::CLASS1::MET_MAX_N - damage.meteor_num);
+            damage.meteor_num = DEFL_DMG_CONST::CLASS1::MET_MAX_N;
         }
         return false;
     }
 };
 
-class Class2: private Deflector {
+class Class2: public Deflector {
 public:
-    Class2(bool is_photonic): Deflector(is_photonic) {}
+    explicit Class2(bool is_photonic): Deflector(is_photonic) {}
 
-    bool AsteroidProtect(int aster_num) override {
+    bool AsteroidProtect(int& aster_num) override {
         if (!is_damaged) {
-            damage.aster_num += aster_num;
-            if (damage.aster_num <= DEFL_DMG_CONST::CLASS2::AST_MAX_N) {
+            if (DEFL_DMG_CONST::CLASS2::AST_MAX_N - damage.aster_num >= aster_num) {
+                damage.aster_num += aster_num;
+                aster_num = 0;
                 return true;
             }
-            is_damaged = true;
+            aster_num -= (DEFL_DMG_CONST::CLASS2::AST_MAX_N - damage.aster_num);
+            damage.aster_num = DEFL_DMG_CONST::CLASS2::AST_MAX_N;
         }
         return false;
     }
 
-    bool MeteoriteProtect(int meteor_num) override {
+    bool MeteoriteProtect(int& meteor_num) override {
         if (!is_damaged) {
-            damage.meteor_num += meteor_num;
-            if (damage.meteor_num <= DEFL_DMG_CONST::CLASS2::AST_MAX_N) {
+            if (DEFL_DMG_CONST::CLASS2::MET_MAX_N - damage.meteor_num >= meteor_num) {
+                damage.meteor_num += meteor_num;
+                meteor_num = 0;
                 return true;
             }
-            is_damaged = true;
+            meteor_num -= (DEFL_DMG_CONST::CLASS2::MET_MAX_N - damage.meteor_num);
+            damage.meteor_num = DEFL_DMG_CONST::CLASS2::MET_MAX_N;
         }
         return false;
     }
 };
 
-class Class3: private Deflector {
+class Class3: public Deflector {
 public:
-    Class3(bool is_photonic): Deflector(is_photonic) {}
-    bool AsteroidProtect(int aster_num) override {
+    explicit Class3(bool is_photonic): Deflector(is_photonic) {}
+
+    bool AsteroidProtect(int& aster_num) override {
         if (!is_damaged) {
-            damage.aster_num += aster_num;
-            if (damage.aster_num <= DEFL_DMG_CONST::CLASS3::AST_MAX_N) {
+            if (DEFL_DMG_CONST::CLASS3::AST_MAX_N - damage.aster_num >= aster_num) {
+                damage.aster_num += aster_num;
+                aster_num = 0;
                 return true;
             }
-            is_damaged = true;
+            aster_num -= (DEFL_DMG_CONST::CLASS3::AST_MAX_N - damage.aster_num);
+            damage.aster_num = DEFL_DMG_CONST::CLASS3::AST_MAX_N;
         }
         return false;
     }
 
-    bool MeteoriteProtect(int meteor_num) override {
+    bool MeteoriteProtect(int& meteor_num) override {
         if (!is_damaged) {
-            damage.meteor_num += meteor_num;
-            if (damage.meteor_num <= DEFL_DMG_CONST::CLASS3::AST_MAX_N) {
+            if (DEFL_DMG_CONST::CLASS3::MET_MAX_N - damage.meteor_num >= meteor_num) {
+                damage.meteor_num += meteor_num;
+                meteor_num = 0;
                 return true;
             }
-            is_damaged = true;
+            meteor_num -= (DEFL_DMG_CONST::CLASS3::MET_MAX_N - damage.meteor_num);
+            damage.meteor_num = DEFL_DMG_CONST::CLASS3::MET_MAX_N;
         }
         return false;
     }
 };
 
-#endif DEFLECTOR_H
+#endif // DEFLECTOR_H
