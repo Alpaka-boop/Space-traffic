@@ -8,7 +8,7 @@
 #include "Engine.h"
 #include "Result.h"
 
-bool Test() {
+void Test() {
     Market market;
     DensitySpace densitySpace;
 
@@ -86,5 +86,72 @@ bool Test() {
     result7.Dump(std::cout);
     std::cout << '\n';
 
-    return true;
+    /*
+     * Короткий маршрут в обычном космосе.
+     * Запускаем Прогулочный челнок и Ваклас.
+     * Т.к. у Вакласа большая стоимость полёта, Прогулочный челнок должен быть оптимальнее для данного маршрута.
+     */
+
+    std::cout << "==============Test4==============\n";
+    FreeSpace freeSpace;
+    Conditions conditions4(std::make_tuple(700ll, 0, 0), Difficulties(0, 0, 0, 0)
+            , std::make_shared<Market>(market), freeSpace);
+    PleasureShuttle pleasureShuttle2;
+    Vaclas vaclas4;
+
+    std::cout << "== Pleasure shattle\n";
+    Result result8 = pleasureShuttle2.Navigate(conditions4);
+    result8.Dump(std::cout);
+    std::cout << '\n';
+
+    std::cout << "== Vaclas\n";
+    Result result9 = vaclas4.Navigate(conditions4);
+    result9.Dump(std::cout);
+    std::cout << '\n';
+
+    /*
+     * Маршрут средней длины в туманности повышенной плотности пространства.
+     * Запускаем Авгур и Стеллу.
+     * Т.к. у Авгура возможная дальность прохождения по подпространственным каналам меньше – должна быть выбрана Стелла.
+     */
+
+    std::cout << "==============Test5==============\n";
+    DensitySpace densitySpace1;
+    Conditions conditions5(std::make_tuple(0, 1200ll, 0), Difficulties(0, 0, 0, 0)
+            , std::make_shared<Market>(market), densitySpace1);
+    Avgur avgur3;
+    Stella stella1;
+
+    std::cout << "== Avgur\n";
+    Result result10 = avgur3.Navigate(conditions5);
+    result10.Dump(std::cout);
+    std::cout << '\n';
+
+    std::cout << "== Stella\n";
+    Result result11 = stella1.Navigate(conditions5);
+    result11.Dump(std::cout);
+    std::cout << '\n';
+
+    /*
+     * Маршрут в туманости нитринных частиц.
+     * Запускаем Прогулочный челнок и Ваклас.
+     * Должен быть выбран Ваклас.
+     */
+
+    std::cout << "==============Test6==============\n";
+    NitrineSpace nitrineSpace1;
+    Conditions conditions6(std::make_tuple(0, 0, 1200ll), Difficulties(0, 0, 0, 0)
+            , std::make_shared<Market>(market), nitrineSpace1);
+    PleasureShuttle pleasureShuttle3;
+    Vaclas vaclas5;
+
+    std::cout << "== Pleasure shattle\n";
+    Result result12 = pleasureShuttle3.Navigate(conditions6);
+    result12.Dump(std::cout);
+    std::cout << '\n';
+
+    std::cout << "== Vaclas\n";
+    Result result13 = vaclas5.Navigate(conditions6);
+    result13.Dump(std::cout);
+    std::cout << '\n';
 }

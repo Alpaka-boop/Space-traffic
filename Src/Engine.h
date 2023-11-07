@@ -25,7 +25,7 @@ public:
     }
 
     [[nodiscard]] long long calculateFuelConsumption(const long long& distance) const  override {
-        return distance / fuel_consumption + start_eng_consumption;
+        return distance * fuel_consumption + start_eng_consumption;
     }
 };
 
@@ -53,7 +53,7 @@ public:
     }
 
     [[nodiscard]] long long calculateFuelConsumption(const long long& distance) const override {
-        return distance / fuel_consumption + start_eng_consumption;
+        return distance * fuel_consumption + start_eng_consumption;
     }
 };
 
@@ -79,7 +79,7 @@ public:
                            , ENG_CONST::JUMP_ALPHA_ENG::MAX_JUMP_LENGTH) {}
 
     [[nodiscard]] long long calculateFuelConsumption(const long long& distance) const override {
-        return distance / fuel_consumption + start_eng_consumption;
+        return distance * fuel_consumption + start_eng_consumption;
     }
 };
 
@@ -90,7 +90,7 @@ public:
                                     , ENG_CONST::JUMP_OMEGA_ENG::MAX_JUMP_LENGTH) {}
 
     [[nodiscard]] long long calculateFuelConsumption(const long long& distance) const override {
-        return distance / (fuel_consumption * static_cast<long long>(std::log(fuel_consumption)))
+        return distance * (fuel_consumption * static_cast<long long>(std::log(fuel_consumption)))
                                 + start_eng_consumption;
     }
 };
@@ -102,7 +102,7 @@ public:
                                     , ENG_CONST::JUMP_GAMMA_ENG::MAX_JUMP_LENGTH) {}
 
     [[nodiscard]] long long calculateFuelConsumption(const long long& distance) const override {
-        return distance / (fuel_consumption * fuel_consumption) + start_eng_consumption;
+        return distance * (fuel_consumption * fuel_consumption) + start_eng_consumption;
     }
 };
 

@@ -11,7 +11,7 @@ namespace ENG_CONST {
     }
     namespace PULSE_E_ENG {
         const long long FUEL_TO_START = 100;
-        const long long FUEL_CONSUMPTION = 200;
+        const long long FUEL_CONSUMPTION = 500;
     }
     const long long JUMP_ENG_AVG_SPEED = 100;
     namespace JUMP_ALPHA_ENG {

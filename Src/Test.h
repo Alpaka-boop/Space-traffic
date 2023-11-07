@@ -1,6 +1,6 @@
 #ifndef TEST_H
 #define TEST_H
 
-bool Test();
+void Test();
 
 #endif // TEST_H

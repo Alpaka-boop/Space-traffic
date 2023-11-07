@@ -126,6 +126,7 @@ private:
     }
 
     bool IsAbleToComplete(const Environment &environment, const RouteEnvDistance&) override {
+        int a = 0;
         return isFreeSpace(environment);
     }
 };
