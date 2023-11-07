@@ -20,7 +20,7 @@ bool Test() {
      */
     std::cout << "==============Test1==============\n";
 
-    Conditions conditions1(std::make_tuple(800ll, 1000ll, 1200ll), Difficulties(0, 0, 0, 0)
+    Conditions conditions1(std::make_tuple(800ll, 99999ll, 1200ll), Difficulties(0, 0, 0, 0)
                            , std::make_shared<Market>(market), densitySpace);
     PleasureShuttle pleasureShuttle1;
     Avgur avgur1;
@@ -63,7 +63,7 @@ bool Test() {
      * Первый – уничтожен после столкновения, второй – только потерял щиты, третий – был не тронут.
      */
 
-    std::cout << "==============Test2==============\n";
+    std::cout << "==============Test3==============\n";
     NitrineSpace nitrineSpace;
     Conditions conditions3(std::make_tuple(800ll, 1000ll, 1200ll), Difficulties(0, 0, 0, 1)
             , std::make_shared<Market>(market), nitrineSpace);

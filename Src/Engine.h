@@ -13,14 +13,6 @@ public:
     [[nodiscard]] virtual long long calculateTimeTravel(const long long& distance) const = 0;
     Engine(const long long& start_eng_consumption, const long long& fuel_consumption)
                 : start_eng_consumption(start_eng_consumption), fuel_consumption(fuel_consumption) {}
-
-    [[nodiscard]] long long getFuelConsumption() const {
-        return fuel_consumption;
-    }
-
-    [[nodiscard]] long long getStartFuelConsumption() const {
-        return start_eng_consumption;
-    }
 };
 
 class PulseClassCEngine: public Engine {
@@ -66,19 +58,25 @@ public:
 };
 
 class JumpClassEngine: public Engine {
+    const long long max_jump_length = 0;
 public:
-    JumpClassEngine(const long long& fuel_to_start, const long long& fuel_consumption)
-                : Engine(fuel_to_start, fuel_consumption) {}
+    JumpClassEngine(const long long& fuel_to_start, const long long& fuel_consumption, const long long& max_jump_length)
+                : Engine(fuel_to_start, fuel_consumption), max_jump_length(max_jump_length) {}
 
     [[nodiscard]] long long calculateTimeTravel(const long long& distance) const override {
         return distance / ENG_CONST::JUMP_ENG_AVG_SPEED;
+    }
+
+    long long getMaxJumpLength() const {
+        return max_jump_length;
     }
 };
 
 class AlphaJumpEng: public JumpClassEngine {
 public:
     AlphaJumpEng(): JumpClassEngine(ENG_CONST::JUMP_ALPHA_ENG::FUEL_TO_START
-                           , ENG_CONST::JUMP_ALPHA_ENG::FUEL_CONSUMPTION) {}
+                           , ENG_CONST::JUMP_ALPHA_ENG::FUEL_CONSUMPTION
+                           , ENG_CONST::JUMP_ALPHA_ENG::MAX_JUMP_LENGTH) {}
 
     [[nodiscard]] long long calculateFuelConsumption(const long long& distance) const override {
         return distance / fuel_consumption + start_eng_consumption;
@@ -88,7 +86,8 @@ public:
 class OmegaJumpEng: public JumpClassEngine {
 public:
     OmegaJumpEng(): JumpClassEngine(ENG_CONST::JUMP_OMEGA_ENG::FUEL_TO_START
-                                    , ENG_CONST::JUMP_OMEGA_ENG::FUEL_CONSUMPTION) {}
+                                    , ENG_CONST::JUMP_OMEGA_ENG::FUEL_CONSUMPTION
+                                    , ENG_CONST::JUMP_OMEGA_ENG::MAX_JUMP_LENGTH) {}
 
     [[nodiscard]] long long calculateFuelConsumption(const long long& distance) const override {
         return distance / (fuel_consumption * static_cast<long long>(std::log(fuel_consumption)))
@@ -99,7 +98,8 @@ public:
 class GammaJumpEng: public JumpClassEngine {
 public:
     GammaJumpEng(): JumpClassEngine(ENG_CONST::JUMP_GAMMA_ENG::FUEL_TO_START
-                                    , ENG_CONST::JUMP_GAMMA_ENG::FUEL_CONSUMPTION) {}
+                                    , ENG_CONST::JUMP_GAMMA_ENG::FUEL_CONSUMPTION
+                                    , ENG_CONST::JUMP_GAMMA_ENG::MAX_JUMP_LENGTH) {}
 
     [[nodiscard]] long long calculateFuelConsumption(const long long& distance) const override {
         return distance / (fuel_consumption * fuel_consumption) + start_eng_consumption;

@@ -12,6 +12,7 @@
 #include "Conditions.h"
 #include "Market.h"
 #include "Damage.h"
+#include "IsTypeChecker.h"
 
 class Ship {
 public:
@@ -34,13 +35,13 @@ public:
     virtual long long calculateFuelConsumption(const Conditions& conditions) = 0;
     virtual long long calculateTimeTravel(const RouteEnvDistance& distance) = 0;
 
-    virtual bool IsAbleToComplete(const Environment& environment) = 0;
+    virtual bool IsAbleToComplete(const Environment& environment, const RouteEnvDistance& distance) = 0;
 
     Ship(DEFL&& deflector, AntiNitrAmitter anti_nitr_amitter)
             : deflector(std::forward<DEFL>(deflector)), anti_nitr_amitter(anti_nitr_amitter) {}
 
     Result Navigate(Conditions& conditions) {
-        is_lost = !IsAbleToComplete(conditions.environment);
+        is_lost = !IsAbleToComplete(conditions.environment, conditions.distance);
         getDamage(conditions.difficulties);
         Result result(is_alive_team, is_broken_ship, is_lost, deflector->isBroken());
 
@@ -124,13 +125,8 @@ private:
         }
     }
 
-    bool IsAbleToComplete(const Environment &environment) override {
-        try {
-            dynamic_cast<const FreeSpace&>(environment);
-        } catch (std::bad_cast) {
-            return false;
-        }
-        return  true;
+    bool IsAbleToComplete(const Environment &environment, const RouteEnvDistance&) override {
+        return isFreeSpace(environment);
     }
 };
 
@@ -181,7 +177,13 @@ private:
         }
     }
 
-    bool IsAbleToComplete(const Environment &environment) override {
+    bool IsAbleToComplete(const Environment &environment, const RouteEnvDistance& distance) override {
+        if (isDensitySpace(environment)) {
+            long long max_jump_length = (dynamic_cast<JumpClassEngine&>(*(engines.jump_eng))).getMaxJumpLength();
+            if (max_jump_length < distance.spatial_channels_length) {
+                return false;
+            }
+        }
         return true;
     }
 };
@@ -225,13 +227,8 @@ private:
         }
     }
 
-    bool IsAbleToComplete(const Environment &environment) override {
-        try {
-            dynamic_cast<const DensitySpace&>(environment);
-        } catch (std::bad_cast) {
-            return true;
-        }
-        return false;
+    bool IsAbleToComplete(const Environment &environment, const RouteEnvDistance&) override {
+        return isFreeSpace(environment) || isNitrineSpace(environment);
     }
 };
 
@@ -281,13 +278,17 @@ private:
         }
     }
 
-    bool IsAbleToComplete(const Environment &environment) override {
-        try {
-            dynamic_cast<const NitrineSpace&>(environment);
-        } catch (std::bad_cast) {
-            return true;
+    bool IsAbleToComplete(const Environment &environment, const RouteEnvDistance& distance) override {
+        if (isNitrineSpace(environment)) {
+            return false;
         }
-        return false;
+        if (isDensitySpace(environment)) {
+            long long max_jump_length = (dynamic_cast<JumpClassEngine&>(*(engines.jump_eng))).getMaxJumpLength();
+            if (max_jump_length < distance.spatial_channels_length) {
+                return false;
+            }
+        }
+        return true;
     }
 };
 
@@ -338,7 +339,13 @@ private:
         }
     }
 
-    bool IsAbleToComplete(const Environment &environment) override {
+    bool IsAbleToComplete(const Environment &environment, const RouteEnvDistance& distance) override {
+        if (isDensitySpace(environment)) {
+            long long max_jump_length = (dynamic_cast<JumpClassEngine&>(*(engines.jump_eng))).getMaxJumpLength();
+            if (max_jump_length < distance.spatial_channels_length) {
+                return false;
+            }
+        }
         return true;
     }
 };
