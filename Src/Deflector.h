@@ -73,9 +73,9 @@ public:
     }
 };
 
-class Class1: public Deflector {
+class Class1Defl: public Deflector {
 public:
-    explicit Class1(bool is_photonic): Deflector(is_photonic) {}
+    explicit Class1Defl(bool is_photonic): Deflector(is_photonic) {}
 
     bool AsteroidProtect(int& aster_num) override {
         if (!is_damaged) {
@@ -120,9 +120,9 @@ public:
     }
 };
 
-class Class2: public Deflector {
+class Class2Defl: public Deflector {
 public:
-    explicit Class2(bool is_photonic): Deflector(is_photonic) {}
+    explicit Class2Defl(bool is_photonic): Deflector(is_photonic) {}
 
     bool AsteroidProtect(int& aster_num) override {
         if (!is_damaged) {
@@ -167,9 +167,9 @@ public:
     }
 };
 
-class Class3: public Deflector {
+class Class3Defl: public Deflector {
 public:
-    explicit Class3(bool is_photonic): Deflector(is_photonic) {}
+    explicit Class3Defl(bool is_photonic): Deflector(is_photonic) {}
 
     bool AsteroidProtect(int& aster_num) override {
         if (!is_damaged) {

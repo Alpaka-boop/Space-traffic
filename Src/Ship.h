@@ -140,7 +140,7 @@ class Vaclas: public Ship {
     const int8_t weight_class = MIDDLE_WEIGHT_CLASS;     // middle weight, middle height
 
 public:
-    explicit Vaclas(bool is_photonic = false): Ship(std::make_shared<Class1>(is_photonic), AMITTER::FALSE)
+    explicit Vaclas(bool is_photonic = false): Ship(std::make_shared<Class1Defl>(is_photonic), AMITTER::FALSE)
                                 , engines({std::make_shared<PulseClassEEngine>(), std::make_shared<GammaJumpEng>()}) {}
 private:
     long long calculateFuelConsumption(const Conditions& conditions) override {
@@ -195,7 +195,7 @@ class Meredian: public Ship {
     const int8_t weight_class = MIDDLE_WEIGHT_CLASS;     // middle weight, middle height
 
 public:
-    explicit Meredian(bool is_photonic = false): Ship(std::make_shared<Class2>(is_photonic)
+    explicit Meredian(bool is_photonic = false): Ship(std::make_shared<Class2Defl>(is_photonic)
                                     , AMITTER::TRUE), engine(std::make_shared<PulseClassEEngine>()) {}
 private:
     long long calculateFuelConsumption(const Conditions& conditions) override {
@@ -242,7 +242,7 @@ class Stella: public Ship {
     const int8_t weight_class = LOW_WEIGHT_CLASS;        // middle weight, middle height
 
 public:
-    explicit Stella(bool is_photonic = false): Ship(std::make_shared<Class1>(is_photonic), AMITTER::FALSE)
+    explicit Stella(bool is_photonic = false): Ship(std::make_shared<Class1Defl>(is_photonic), AMITTER::FALSE)
             , engines({std::make_shared<PulseClassCEngine>(), std::make_shared<OmegaJumpEng>()}) {}
 private:
     long long calculateFuelConsumption(const Conditions& conditions) override {
@@ -302,7 +302,7 @@ class Avgur: public Ship {
     const int8_t weight_class = HIGH_WEIGHT_CLASS;       // middle weight, middle height
 
 public:
-    explicit Avgur(bool is_photonic = false): Ship(std::make_shared<Class3>(is_photonic), AMITTER::FALSE)
+    explicit Avgur(bool is_photonic = false): Ship(std::make_shared<Class3Defl>(is_photonic), AMITTER::FALSE)
                                 , engines({std::make_shared<PulseClassEEngine>(), std::make_shared<AlphaJumpEng>()}) {}
 private:
     long long calculateFuelConsumption(const Conditions& conditions) override {
